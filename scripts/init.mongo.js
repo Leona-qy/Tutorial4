@@ -1,37 +1,29 @@
-/*
- * Run using the mongo shell. For remote databases, ensure that the
- * connection string is supplied in the command line. For example:
- * localhost:
- *   mongo issuetracker scripts/init.mongo.js
- * Atlas:
- *   mongo mongodb+srv://user:pwd@xxx.mongodb.net/issuetracker scripts/init.mongo.js
- * MLab:
- *   mongo mongodb://user:pwd@xxx.mlab.com:33533/issuetracker scripts/init.mongo.js
- */
+db.travellers.remove({});
+db.counters.remove({});
+db.blacklists.remove({});
 
-db.issues.remove({});
-
-const issuesDB = [
+const travelerDB = [
   {
-    id: 1, status: 'New', owner: 'Ravan', effort: 5,
-    created: new Date('2019-01-15'), due: undefined,
-    title: 'Error in console when clicking Add',
+    id: 1, name: 'Lily', phonenum: '12345678',
+    time: new Date('2022-02-22'),
   },
   {
-    id: 2, status: 'Assigned', owner: 'Eddie', effort: 14,
-    created: new Date('2019-01-16'), due: new Date('2019-02-01'),
-    title: 'Missing bottom border on panel',
+    id: 2, name: 'Mike', phonenum: '56781234',
+    time: new Date('2022-02-23'),
   },
 ];
 
-db.issues.insertMany(issuesDB);
-const count = db.issues.count();
-print('Inserted', count, 'issues');
+db.travellers.insertMany(travelerDB);
+const count = db.travellers.count();
+print('Inserted', count, 'travellers');
 
-db.counters.remove({ _id: 'issues' });
-db.counters.insert({ _id: 'issues', current: count });
+db.counters.remove({ _id: 'travallers' });
+db.counters.insert({ _id: 'travellers', current: count });
 
-db.issues.createIndex({ id: 1 }, { unique: true });
-db.issues.createIndex({ status: 1 });
-db.issues.createIndex({ owner: 1 });
-db.issues.createIndex({ created: 1 });
+db.travellers.createIndex({ id: 1 }, { unique: true });
+db.travellers.createIndex({ name: 1 });
+db.travellers.createIndex({ phonenum: 1 });
+db.travellers.createIndex({ time: 1 });
+
+db.blacklists.insert({name: "Helay"});
+db.blacklists.insert({name: "Steven"});
