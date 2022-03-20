@@ -1,14 +1,10 @@
+const dateRegex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
 
-const initialTravellers = [
-  {
-    id: 1, name: 'Lily', phonenum: '12345678',
-    time: '2022-02-22',
-  },
-  {
-    id: 2, name: 'Mike', phonenum: '56781234',
-    time: '2022-02-23' ,
-  },
-];
+function jsonDateReviver(key, value) {
+  if (dateRegex.test(value)) return new Date(value);
+  return value;
+}
+
 
 class ReservedTicket extends React.Component{ 
   componentDidMount() {
@@ -93,7 +89,7 @@ class TravellerRow extends React.Component{
         <td style = {style}>{traveller.id}</td>
         <td style = {style}>{traveller.name}</td>
         <td style = {style}>{traveller.phonenum}</td>
-        <td style = {style}>{traveller.time}</td>
+        <td style = {style}>{traveller.time.toDateString()}</td>
       </tr>
     );
   }
@@ -137,22 +133,22 @@ class TravellerDel extends React.Component{
     var tbl=document.getElementById("del");
     const travellers=this.props.travellers;
     const form=document.forms.travellerDel; 
-    const objectDel=Number(form.serialno.value)
-    if (objectDel > travellers.length) {
-      alert("Error:No Such a Traveller.");
+    if (form.name.value==''){
+      alert('Please input Name')
     }
-    else{
+    const name = {
+      name: form.name.value
+    }
+    this.props.deleteTraveller(name);
 
-      this.props.deleteTraveller(objectDel-1);
-    }
-    form.serialno.value="";
+    form.name.value="";
 
     }
   
   render() {
     return (
       <form name="travellerDel" onSubmit={this.deleteSubmit}>
-        <input type="index" name="serialno" placeholder="Serial No." />
+        <input type="index" name="name" placeholder="Name" />
         <button>Delete</button>
       </form>
     )
@@ -171,27 +167,60 @@ class TravellerAdd extends React.Component{
     const form=document.forms.travellerAdd;
     const travellers=this.props.travellers;
     const traveller = {
-      name: form.name.value, phonenum: form.phonenumber.value, ope: "delete",
-      time: form.time.value,
+      name: form.name.value, phonenum: form.phonenumber.value,
+      time: new Date(),
     }
+    if (form.name.value=="") {
+      alert("Please input Name")
+    };
+    if (form.phonenumber.value=="") {
+      alert("Please input Phone number")
+    };
+
     if(travellers.length < 25){
       this.props.creatTraveller(traveller);
-      form.name.value="";
-      form.phonenumber.value="";
-      form.time.value="";
-    }
-    else
-    {
-      alert("Error: No Free Seats!")
-    }
+    } else {
+        alert("Error: No Free Seats!")
+      }
+    form.name.value="";
+    form.phonenumber.value="";
   }
   render() {
     return (
       <form name="travellerAdd" onSubmit={this.handleSubmit}>
         <input type="text" name="name" placeholder="Name"/>
         <input type="text" name="phonenumber" placeholder="Phone number"/>
-        <input type="text" name="time" placeholder="Time"/>
         <button>Add</button>
+      </form>
+    );
+  }
+}
+
+class TravellerBlackList extends React.Component{
+  constructor() {
+    super();
+    this.handleSubmit=this.handleSubmit.bind(this);
+    };
+
+  
+  handleSubmit(e) {
+    e.preventDefault();
+    const form=document.forms.travellerBlk;
+    const travellers=this.props.travellers;
+    const traveller = {
+      name: form.name.value
+    }
+    if (form.name.value=="") {
+      alert("Please input Name")
+    }
+    this.props.blackListTraveller(traveller);
+    form.name.value="";
+  }
+  render() {
+    return (
+      <form name="travellerBlk" onSubmit={this.handleSubmit}>
+        <input type="text" name="name" placeholder="Name"/>
+        <button>Add to Blacklist</button>
       </form>
     );
   }
@@ -201,53 +230,64 @@ class Homepage extends React.Component{
   constructor() {
     super();
     this.state={ travellers: [], visible: false , getElem: false, 
-      addElem: false, delElem: false};
+      addElem: false, delElem: false, blkElem: false};
     this.creatTraveller = this.creatTraveller.bind(this);
     this.deleteTraveller = this.deleteTraveller.bind(this);
     this.clickSubmit=this.clickSubmit.bind(this);
     this.getSubmit=this.getSubmit.bind(this);
     this.addSubmit=this.addSubmit.bind(this);
     this.delSubmit=this.delSubmit.bind(this);
+    this.blackSubmit=this.blackSubmit.bind(this);
 
   }
 
   clickSubmit(e){
     e.preventDefault();
     if(this.state.visible==true) {
-      this.setState({ visible: false , getElem:false, addElem:false, delElem:false}) 
+      this.setState({ visible: false , getElem:false, addElem:false, delElem:false, blkElem: false}) 
     }
     else{
-      this.setState({ visible: true , getElem:false, addElem:false, delElem:false}) 
+      this.setState({ visible: true , getElem:false, addElem:false, delElem:false, blkElem: false}) 
     }
   }
 
   getSubmit(e){
     e.preventDefault();
     if(this.state.getElem==true) {
-      this.setState({ getElem: false, visible: false , addElem:false, delElem:false}) 
+      this.setState({ getElem: false, visible: false , addElem:false, delElem:false, blkElem: false}) 
     }
     else{
-      this.setState({ getElem: true, visible: false , addElem:false, delElem:false}) 
+      this.setState({ getElem: true, visible: false , addElem:false, delElem:false, blkElem: false}) 
     }
   }
 
   addSubmit(e){
     e.preventDefault();
     if(this.state.addElem==true) {
-      this.setState({ addElem: false, getElem: false, visible: false , delElem:false}) 
+      this.setState({ addElem: false, getElem: false, visible: false , delElem:false, blkElem: false}) 
     }
     else{
-      this.setState({ addElem: true, getElem: false, visible: false , delElem:false}) 
+      this.setState({ addElem: true, getElem: false, visible: false , delElem:false, blkElem: false}) 
     }
   }
 
   delSubmit(e){
     e.preventDefault();
     if(this.state.delElem==true) {
-      this.setState({ delElem: false ,getElem: false, visible: false , addElem:false}) 
+      this.setState({ delElem: false ,getElem: false, visible: false , addElem:false, blkElem: false}) 
     }
     else{
-      this.setState({ delElem: true ,getElem: false, visible: false , addElem:false}) 
+      this.setState({ delElem: true ,getElem: false, visible: false , addElem:false, blkElem: false}) 
+    }
+  }
+
+  blackSubmit(e){
+    e.preventDefault();
+    if(this.state.blkElem==true) {
+      this.setState({ blkElem: false, delElem: false ,getElem: false, visible: false , addElem:false}) 
+    }
+    else{
+      this.setState({ blkElem:true , delElem: false ,getElem: false, visible: false , addElem:false}) 
     }
   }
  
@@ -256,30 +296,65 @@ class Homepage extends React.Component{
     this.loadData();
   }
 
-  loadData() {
-    setTimeout(() => {
-      this.setState({ travellers: initialTravellers});
-    }, 500);
+  async loadData() {
+
+    const query = `query {
+      reservationList {
+        id name phonenum time
+      }
+    }`;
+    const response = await fetch('/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json'},
+      body: JSON.stringify( {query} )
+    });
+    const body = await response.text();
+    const result = JSON.parse(body, jsonDateReviver);
+    this.setState({ travellers: result.data.reservationList });
   }
 
-  creatTraveller(traveller) {
-    traveller.id = this.state.travellers.length + 1;
-    const newTravellerList = this.state.travellers.slice();
-    newTravellerList.push(traveller);
-    this.setState({travellers: newTravellerList});
+  async creatTraveller(traveller) {
+    const query = `mutation travellerAdd ($traveller:  TravellerInputs!){
+      travellerAdd(traveller: $traveller) {
+        id
+      }
+    }`;
+    const response = await fetch('/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json'},
+      body: JSON.stringify({ query, variables: { traveller } })
+    });
+    this.loadData();
   }
 
-  deleteTraveller(index) {
-    const newTravellerList = this.state.travellers.slice();
-    newTravellerList.splice(index,1);
-    for(var j=0;j<newTravellerList.length;j++){
-      newTravellerList[j].id= j+1
-    }
-    this.setState({travellers: newTravellerList});
+
+  async deleteTraveller(name) {
+
+    const query = `mutation travellerDelete ($name:  TravellerDeleteInputs!){
+      travellerDelete(name: $name) {
+        id
+      }
+    }`;
+    const response = await fetch('/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json'},
+      body: JSON.stringify( {query, variables: { name }} )
+    });
+    this.loadData();
   }
 
-
-  
+  async blackListTraveller(traveller) {
+    const query = `mutation travellerBlacklist ($traveller:  TravellerBlkInputs!){
+      travellerBlacklist(traveller: $traveller){
+        name
+      }
+    }`;
+    const response = await fetch('/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json'},
+      body: JSON.stringify({ query, variables: { traveller } })
+    });
+  }
   render(){
     return (
       <React.Fragment>
@@ -289,6 +364,7 @@ class Homepage extends React.Component{
           <button onClick={this.getSubmit}>Reservation List</button>
           <button onClick={this.addSubmit}>Add Traveller</button>
           <button onClick={this.delSubmit}>Delete Traveller</button>
+          <button onClick={this.blackSubmit}>Black List</button>
         </nav>
         <hr />
         {this.state.visible ? (
@@ -306,6 +382,11 @@ class Homepage extends React.Component{
         {this.state.delElem ? (
           <TravellerDel travellers={this.state.travellers} deleteTraveller={this.deleteTraveller}/>
         ) : null}
+        <hr />
+        {this.state.blkElem ? (
+          <TravellerBlackList travellers={this.state.travellers} blackListTraveller={this.blackListTraveller}/>
+        ) : null}
+
         </React.Fragment>
     );
   }
